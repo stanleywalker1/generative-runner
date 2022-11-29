@@ -9,7 +9,7 @@ let canvas, playerLayer, drawingLayer, pixelLayer;
 
 
 function preload() {
-  img = loadImage('media/agariomush.png');
+  img = loadImage('media/colormush.png');
 }
 
 

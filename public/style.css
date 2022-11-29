@@ -34,9 +34,9 @@ html, body {
 #personalweb a {
    margin-left: 10px;
    color: #d8dedfe3;
-   text-decoration: none;
-   border: groove;
-   font-family: Impact, Haettenschweiler, 'Arial Narrow', sans-serif;
+   /* text-decoration: none;
+   border: groove; */
+   font-family: monospace;
 }
 
  #p5 {
