@@ -1,5 +1,6 @@
 let platforms = [];
 let leftWall = -500;
+let state = 0;
 
 
 let bg1;
@@ -8,6 +9,8 @@ let bg3;
 let bg4;
 let bg5;
 let bg6;
+
+let planet;
 
 let bg1x = 0;
 let bg2x = 500;
@@ -43,19 +46,19 @@ function preload() {
     bg5 = loadImage("media/near-clouds.png"); 
     bg6 = loadImage("media/near-clouds.png");
 
+    planet = loadImage("media/planet.png");
 
     downArrow = loadImage("media/arrow_down.png");
     upArrow = loadImage("media/arrow_up.png");
     leftArrow = loadImage("media/arrow_left.png");
     rightArrow = loadImage("media/arrow_right.png");
-
-   
   
 }
 
 function setup() {
     myCanvas = createCanvas(500, 500);
     myCanvas.parent("game_container");
+    planet.resize(500,0);
 
     bodyPallete = [color('#7400b8'), color('#e67e22'), color('#5e60ce'), color('#5390d9'), color('#4ea8de'), color('48bfe3,'), color('#56cfe1'), color('#64dfdf'), color('#72efdd'), color('#80ffdb')];
     headPallete = [color('#006d77'), color('#83c5be'), color('#f0f3bd'), color('#ffddd2'), color('#e29578')];
@@ -70,96 +73,178 @@ function setup() {
 
 function draw() {
 
-    background(0);
-    imageMode(CORNER);
+  if (state == 0) {
+    CloudMode();
+  }
+  else if (state == 1) {
+    SpaceMode();
+  }
+  else {
+    gameEnd();
+    }
+ 
 
-    image(bg1, bg1x, 0);
-    image(bg2, bg2x, 0);
-    image(bg3, bg3x, 0);
-    image(bg4, bg4x, 0);
-    image(bg5, bg5x, 0);
-    image(bg6, bg6x, 0);
+  
 
-    bg1x -= speed1;
-    bg2x -= speed1;
-    bg3x -= speed2;
-    bg4x -= speed2;
-    bg5x -= speed3;
-    bg6x -= speed3;
+   
+}
 
-    if (bg1x < leftWall){ 
-        bg1x = bg1x + 500;
+function CloudMode(){
+  background(0);
+  imageMode(CORNER);
+
+  image(bg1, bg1x, 0);
+  image(bg2, bg2x, 0);
+  image(bg3, bg3x, 0);
+  image(bg4, bg4x, 0);
+  image(bg5, bg5x, 0);
+  image(bg6, bg6x, 0);
+
+  bg1x -= speed1;
+  bg2x -= speed1;
+  bg3x -= speed2;
+  bg4x -= speed2;
+  bg5x -= speed3;
+  bg6x -= speed3;
+
+  if (bg1x < leftWall){ 
+      bg1x = bg1x + 500;
+  }
+
+  if (bg2x < leftWall) {
+      bg2x = bg1x + 500;
+  }
+
+  if (bg3x < leftWall) {
+      bg3x = bg4x + 500;
+  }
+  
+  if (bg4x < leftWall) {
+      bg4x = bg3x + 500;
+  }
+
+  if (bg5x < leftWall) {
+      bg5x = bg6x + 500;
+  }
+
+  if (bg6x < leftWall) {
+      bg6x = bg5x + 500;
+  }
+
+  for(let i = arrowsArr.length - 1; i >= 0; i--){
+      arrowsArr[i].display();
+      arrowsArr[i].switchFlow();
     }
 
-    if (bg2x < leftWall) {
-        bg2x = bg1x + 500;
-    }
+  if(frameCount % (interval * 30) == 0){
+      robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+  }
 
-    if (bg3x < leftWall) {
-        bg3x = bg4x + 500;
-    }
-    
-    if (bg4x < leftWall) {
-        bg4x = bg3x + 500;
-    }
+  for(let i = robots.length - 1; i >= 0; i--){
+  robots[i].move();
+  robots[i].checkCollision();
+  noStroke();
+  robots[i].display();
+  
+  
+  if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
+      robots.splice(i, 1);
+      i = i - 1;
+  } 
 
-    if (bg5x < leftWall) {
-        bg5x = bg6x + 500;
-    }
+  }
 
-    if (bg6x < leftWall) {
-        bg6x = bg5x + 500;
-    }
+  player.update();
+  player.show();
 
-    for(let i = arrowsArr.length - 1; i >= 0; i--){
-        arrowsArr[i].display();
-        arrowsArr[i].switchFlow();
-        
+
+  if (frameCount % 180 == 0) {
+      temp = new Platform(random(width, width + 300), random(height/3, (height/4)*3), random(160,200), 20);
+      platforms.push(temp);
+  }
+
+  for (let i = 0; i < platforms.length; i++) {
+      platforms[i].display();
+      platforms[i].move();
+
+      if (platforms[i].x < -400) {
+          platforms.splice(i, 1);
       }
 
-    if(frameCount % (interval * 30) == 0){
-        robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-    }
+      if(player.x > platforms[i].x && player.x < platforms[i].x+platforms[i].width && player.y > platforms[i].y && player.y < platforms[i].y+platforms[i].height){
+          console.log("on platform");
+          player.velocity = 0;
+          player.y = platforms[i].y;
+      }
 
-    for(let i = robots.length - 1; i >= 0; i--){
-    robots[i].move();
-    robots[i].checkCollision();
-    noStroke();
-    robots[i].display();
+      line(player.x, player.y, platforms[i].x, platforms[i].y);
+  }
+}
+
+function SpaceMode(){ 
+  background(0);
+  background(0);
+  imageMode(CORNER);
+
+  image(planet, 0, 0);
+  player.update();
+  player.show();
+
+
+  for(let i = arrowsArr.length - 1; i >= 0; i--){
+    arrowsArr[i].display();
+    arrowsArr[i].switchFlow();
     
+  }
+
+if(frameCount % (interval * 30) == 0){
+    robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+}
+
+for(let i = robots.length - 1; i >= 0; i--){
+robots[i].move();
+robots[i].checkCollision();
+noStroke();
+robots[i].display();
+
+
+if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
+    robots.splice(i, 1);
+    i = i - 1;
+} 
+
+}
+
+player.update();
+player.show();
+
+
+if (frameCount % 180 == 0) {
+    temp = new Platform(random(30, width), random(height, height+20), 80, 40);
+    platforms.push(temp);
+}
+
+for (let i = 0; i < platforms.length; i++) {
+    platforms[i].display();
+
+
+    platforms[i].y -=2.5;
     
-    if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
-        robots.splice(i, 1);
-        i = i - 1;
-    } 
 
+    if (platforms[i].y < -100) {
+        platforms.splice(i, 1);
     }
 
-    player.update();
-    player.show();
-
-
-    if (frameCount % 180 == 0) {
-        temp = new Platform();
-        platforms.push(temp);
+    if(player.x > platforms[i].x && player.x < platforms[i].x+platforms[i].width && player.y > platforms[i].y && player.y < platforms[i].y+platforms[i].height){
+        console.log("on platform");
+        player.velocity = 0;
+        player.y = platforms[i].y;
     }
 
-    for (let i = 0; i < platforms.length; i++) {
-        platforms[i].display();
-        platforms[i].move();
+    line(player.x, player.y, platforms[i].x, platforms[i].y);
+}
 
-        if (platforms[i].x < -400) {
-            platforms.splice(i, 1);
-        }
 
-        if(player.x > platforms[i].x && player.x < platforms[i].x+platforms[i].width && player.y > platforms[i].y && player.y < platforms[i].y+platforms[i].height){
-            console.log("on platform");
-            player.velocity = 0;
-            player.y = platforms[i].y;
-        }
- 
-        line(player.x, player.y, platforms[i].x, platforms[i].y);
-    }
 }
 
 function keyPressed() {
@@ -221,11 +306,11 @@ function circRect(cx, cy, rad, rx, ry, rw, rh) {
    }
 
 class Platform {
-    constructor() {
-        this.x = random(width, width + 300);
-        this.y = random(height/3, (height/4)*3);
-        this.width = random(100, 300);
-        this.height = random(10, 50);
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w; 
+        this.height = h;
         this.red = 23;
         this.green = 120;
         this.blue = 200;
@@ -386,44 +471,97 @@ class Robot {
         line(player.x, player.y, this.x, this.y);
         if(d < 20){
         if(this.dir=="up"){
-            // this.graphic = rightArrow;
-            // this.dir = "right";
-           
-            up();
+    // switch to state 1   
+          platforms = [];
+          player.x = 64;
+          player.y = height / 2;
+          player.gravity = 0.6;
+          player.lift = -11;
+          player.velocity = 0;
+          player.size = 32;
+           state = 1;
 
           }
-          else if(this.dir=="right"){
-            // this.graphic = downArrow;
-            // this.dir = "down";
-            up();
-          }
           else if(this.dir=="down"){
-            // this.graphic = leftArrow;
-            // this.dir = "left";
-            up();
+
+            state = 2;
+
+
           }
-          else if(this.dir=="left"){
-            // this.graphic = upArrow;
-            // this.dir = "up";
-            up();
+          else {
+            state = 0;
           }
+         
         }
   
      
     }
+
+      
+  
+
+
+    checkClick(testX, testY) {
+
+      if (testX > this.x && testX < this.x+50 && testY > this.y && testY < this.y + 50) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
   
     checkPressed(){
-       
+         if(this.dir=="up"){
+            this.graphic = rightArrow;
+            this.dir = "right";
+          
+          }
+          else if(this.dir=="right"){
+            this.graphic = downArrow;
+            this.dir = "down";
+          }
+          else if(this.dir=="down"){
+            this.graphic = leftArrow;
+            this.dir = "left";
+          }
+          else if(this.dir=="left"){
+            this.graphic = upArrow;
+            this.dir = "up";
+          }
         }
     }
-
-    function up(){
-        for (let i = 0; i < platforms.length; i++) { 
-          //  platforms[i].x = 0;
-            platforms[i].y -=3;
-            platforms[i].width = platforms[i].height;
-            platforms[i].height = platforms[i].width;
-
-        }
-        
+  
+  
+  function mousePressed() {
+    // see if the user is clicking on the button
+    for(let i = arrowsArr.length-1; i >=0;i--){
+    let clicked = arrowsArr[i].checkClick(mouseX, mouseY);
+  
+    if (clicked == true) {
+      
+  
+      if(arrowsArr[i].dir=="up"){
+        arrowsArr[i].graphic = rightArrow;
+        arrowsArr[i].dir = "right";
+        state = 1;
+      }
+      else if(arrowsArr[i].dir=="right"){
+        arrowsArr[i].graphic = downArrow;
+        arrowsArr[i].dir = "down";
+        state = 0;
+  
+      }
+      else if(arrowsArr[i].dir=="down"){
+        arrowsArr[i].graphic = leftArrow;
+        arrowsArr[i].dir = "left";
+  
+      }
+      else if(arrowsArr[i].dir=="left"){
+        arrowsArr[i].graphic = upArrow;
+        arrowsArr[i].dir = "up";
+  
+      }
     }
+  }
+  }
