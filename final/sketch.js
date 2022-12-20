@@ -11,9 +11,9 @@ let dim1Front = [];
 let dim1Middle = [];
 let dim1Back = [];
 
-let speed1 = 0.1;
-let speed2 = 0.3;
-let speed3 = 0.5;
+let speed1 = 0.3;
+let speed2 = 0.5;
+let speed3 = 0.8;
 
 let dim2Front = [];
 let dim2Middle = [];
@@ -44,29 +44,29 @@ let arrow;
 function preload() {
 
     // FRONT IMAGES
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 4; i++) {
       dim1Front[i] = loadImage("media/front/dim1/front" + i + ".png");
     }
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 6; i++) {
       dim2Front[i] = loadImage("media/front/dim2/front" + i + ".png");
     }
 
     // MIDDLE IMAGES
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 7; i++) {
       dim1Middle[i] = loadImage("media/middle/dim1/mid" + i + ".png");
     }
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 4; i++) {
       dim2Middle[i] = loadImage("media/middle/dim2/mid" + i + ".png");
     }
 
     // BACK IMAGES
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 4; i++) {
       dim1Back[i] = loadImage("media/back/dim1/back" + i + ".png");
     }
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 6; i++) {
       dim2Back[i] = loadImage("media/back/dim2/back" + i + ".png");
     }
 
@@ -84,7 +84,7 @@ function setup() {
 
     arrows = [["up", upArrow], ["down", downArrow]];
 
-    startArrow = random(arrows);
+    startArrow = arrows[0];
     arrowsArr.push(new Arrow(64, 50, startArrow));
 
     player = new Player();
@@ -130,7 +130,7 @@ function L1Mode() {
       arrowsArr[i].display();
     }
 
-  if(frameCount % (interval * 30) == 0){
+  if(frameCount % 180 == 0){
       robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
   }
 
@@ -148,11 +148,9 @@ function L1Mode() {
 
   }
 
-  player.update();
-  player.show();
 
-  if (frameCount % 180 == 0) {
-      temp = new Platform(random(width, width + 300), random(height/3, (height/4)*3), random(160,200), 20);
+  if (frameCount % 240 == 0) {
+      temp = new Platform(random(width, width + 300), random(200, 400), random(160,200), 20);
       platforms.push(temp);
   }
 
@@ -164,14 +162,18 @@ function L1Mode() {
           platforms.splice(i, 1);
       }
 
-      if(player.x > platforms[i].x && player.x < platforms[i].x+platforms[i].width && player.y > platforms[i].y && player.y < platforms[i].y+platforms[i].height){
-          console.log("on platform");
-          player.velocity = 0;
-          player.y = platforms[i].y;
+      if(player.x > platforms[i].x && player.x <= platforms[i].x + platforms[i].width && player.y -20< platforms[i].y){
+        floorY = platforms[i].y;
       }
 
-      line(player.x, player.y, platforms[i].x, platforms[i].y);
+      else {
+        floorY = 450;
+      }
+
   }
+
+  player.update();
+  player.show();
 }
 
 
@@ -206,9 +208,6 @@ function L2Mode() {
 
   }
 
-  player.update();
-  player.show();
-
   if (frameCount % 180 == 0) {
       temp = new Platform(random(30, width), random(height, height+20), 80, 40);
       platforms.push(temp);
@@ -219,27 +218,26 @@ function L2Mode() {
 
 
       platforms[i].y -=2.5;
-      
-
-      if (platforms[i].y < -100) {
-          platforms.splice(i, 1);
-      }
 
       if(player.x > platforms[i].x && player.x < platforms[i].x+platforms[i].width && player.y > platforms[i].y && player.y < platforms[i].y+platforms[i].height){
-          console.log("on platform");
           player.velocity = 0;
           player.y = platforms[i].y;
       }
 
-      line(player.x, player.y, platforms[i].x, platforms[i].y);
+      if (platforms[i].y < -100) {
+        platforms.splice(i, 1);
+      }
   }
+
+  player.update();
+  player.show();
 
 }
 
 function keyPressed() {
   if (key === ' ') {
-      player.up();
-    }
+    player.up();
+  }
 }
 
 class Player {
@@ -253,9 +251,7 @@ class Player {
   }
 
   up() {
-      if(this.y > 40){
-          this.velocity += this.lift;
-      }
+    this.velocity += this.lift;
   }
 
   update() {
@@ -308,9 +304,8 @@ class Platform {
 
   display() {
       // Set the x position of the rectangle based on its horizontal speed and the amount of time that has elapsed
-        let xpos = 100 + (100 * cos(millis() / 1000));
+      let xpos = 100 + (100 * cos(millis() / 1000));
       
-      // rectMode(CORNER);
       fill(this.red, this.green, this.blue);
 
       rect(this.x, this.y, this.width, this.height);
@@ -331,7 +326,6 @@ class Platform {
       }
       stroke(255, 255, 255, 70);
       strokeWeight(3);
-      // rect(xpos - 5, 100 - 5, 50 + 10, 50 + 10);
   }
 
   move() {
@@ -581,28 +575,25 @@ function getColor(dr) {
   let r = 0;
   let g = 0;
   let b = 0;
-  let count = 0;
   for(let i = 0; i < 500; i++){
     if (dr == "top") {
-      let c = get(i, 0);
+      let c = get(i, 1);
       r += red(c);
       g += green(c);
       b += blue(c);
-      count++;
     }
 
     else if (dr == "bottom") {
-      let c = get(i, 450);
+      let c = get(i, 499);
       r += red(c);
       g += green(c);
       b += blue(c);
-      count++;
     }
   }
 
-  r = r/count;
-  g = g/count;
-  b = b/count;
+  r = r/500;
+  g = g/500;
+  b = b/500;
 
   transColor = color(r, g, b);
 }
