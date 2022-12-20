@@ -1,6 +1,7 @@
 let platforms = [];
 let leftWall = -500;
 let state = 0;
+let trig;
 
 let bg;
 let bg1;
@@ -31,8 +32,10 @@ let transColor;
 let bodyPallete = [];
 let headPallete = [];
 let robots = [];
+let animatedRobots = [];
 let a = 128;
 let interval = 2;
+let swarm;
 
 
 let downArrow, upArrow;
@@ -79,6 +82,8 @@ function setup() {
     myCanvas = createCanvas(500, 500);
     myCanvas.parent("game_container");
 
+    swarm = createGraphics(500, 500);
+
     bodyPallete = [color('#7400b8'), color('#e67e22'), color('#5e60ce'), color('#5390d9'), color('#4ea8de'), color('48bfe3,'), color('#56cfe1'), color('#64dfdf'), color('#72efdd'), color('#80ffdb')];
     headPallete = [color('#006d77'), color('#83c5be'), color('#f0f3bd'), color('#ffddd2'), color('#e29578')];
 
@@ -112,9 +117,11 @@ function draw() {
 
   else {
     transitionMode();
+    image(swarm, 0, 0, 500, 500);
   }
 
-   
+ 
+
 }
 
 
@@ -131,8 +138,8 @@ function L1Mode() {
     }
 
   if(frameCount % (interval * 30) == 0){
-     // robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-      robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+      robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+    //  robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
     }
 
   for(let i = robots.length - 1; i >= 0; i--){
@@ -184,13 +191,24 @@ function L2Mode() {
   bg.display();
   bg.move();
 
+//   for(let i = 30; i >= 0; i--){
+//     background(0);
+//     // robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+//      robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+//  }
+
+  
+
+
+
   for(let i = arrowsArr.length - 1; i >= 0; i--){
     arrowsArr[i].display();
     
   }
 
   if(frameCount % (interval * 30) == 0){
-      robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+     // robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+      robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
   }
 
   for(let i = robots.length - 1; i >= 0; i--){
@@ -198,6 +216,7 @@ function L2Mode() {
   robots[i].checkCollision();
   noStroke();
   robots[i].display();
+  
 
 
   if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
@@ -234,6 +253,7 @@ function L2Mode() {
 
       line(player.x, player.y, platforms[i].x, platforms[i].y);
   }
+
 
 }
 
@@ -385,6 +405,18 @@ class Robot {
     pop();
 
   }
+  displayAnimated() {
+    push();
+  swarm.rectMode(CENTER);
+  swarm.fill(this.bodyColor);
+  swarm.rect(this.x, this.y, this.bodySize, this.bodySize);
+  swarm.fill(this.headColor);
+  swarm.rect(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
+  swarm.fill(255);
+  
+  pop();
+
+}
 
   move(){
     a = (128 + 128 * sin(millis() / 700));
@@ -518,14 +550,19 @@ class Background {
     // parallax background composed of 3 layers
     noStroke();
     imageMode(CORNER);
+   
+
+
     image(this.img1, this.layer1X1, this.y);
     image(this.img1, this.layer1X2, this.y);
+   
 
     image(this.img2, this.layer2X1, this.y);
     image(this.img2, this.layer2X2, this.y);
 
     image(this.img3, this.layer3X1, this.y);
     image(this.img3, this.layer3X2, this.y);
+   
   }
 
   move(){
@@ -567,8 +604,9 @@ class Background {
 
   transition(direction){
     if(direction=="up"){
+
       if(this.y < height * 2){
-        this.y += 10;
+       this.y += 10;
       }
     }
 
@@ -614,38 +652,71 @@ function getColor(dr) {
 
 function transitionMode() {
 
-  if (state == 0) {
+  trig = false;
 
-    let tHeight = bg.y-height;
-    noStroke();
-    fill(transColor);
+  player.show();
+  // swarm.background();
+  //swarm.clear();
 
-    if (tHeight < height){
-      rect(0, tHeight, width, height);
-      bg.transition("up");
-      bg.display();
-      image(nextImg1, 0, tHeight - height, width, height);  
-      image(nextImg2, 0, tHeight - height, width, height);
-      image(nextImg3, 0, tHeight - height, width, height);
-      player.show();
-    }
-
-    else {
-      state = 1;
-      bg.y = 0;
-      bg.layer1X1 = 0;
-      bg.layer1X2 = width;
-      bg.layer2X1 = 0;
-      bg.layer2X2 = width;
-      bg.layer3X1 = 0;
-      bg.layer3X2 = width;
-      bg.img1 = nextImg1;
-      bg.img2 = nextImg2;
-      bg.img3 = nextImg3;
-      inTransition = false;
-    }
-
+  for(let i =  30; i >= 0; i--){
+    animatedRobots.push(new  Robot(random(width+50, width+65), random(height*0.25, height*0.75), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+     
   }
+
+  for(let i =  animatedRobots-1; i >= 0; i--){
+    animatedRobots.push(new  Robot(random(width+50, width+65), random(height*0.25, height*0.75), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+      animatedRobots[i].move();
+      noStroke();
+      animatedRobots[i].displayAnimated();
+
+  
+      if(animatedRobots[i].x > width+100 || animatedRobots[i].x < -80 || animatedRobots[i].y > height || animatedRobots[i].y < -50){
+        animatedRobots.splice(i, 1);
+          i = i - 1;
+    }
+  }
+     console.log(animatedRobots.length);
+    if (state == 0 && animatedRobots.length == 0) {
+      let tHeight = bg.y-height;
+      noStroke();
+      fill(transColor);
+  
+      if (tHeight < height){
+      
+        rect(0, tHeight, width, height);
+        bg.transition("up");
+        bg.display();
+        
+        image(nextImg1, 0, tHeight - height, width, height);  
+        image(nextImg2, 0, tHeight - height, width, height);
+        image(nextImg3, 0, tHeight - height, width, height);
+       
+      
+  
+  
+  
+        
+      }  else {
+
+
+        state = 1;
+        bg.y = 0;
+        bg.layer1X1 = 0;
+        bg.layer1X2 = width;
+        bg.layer2X1 = 0;
+        bg.layer2X2 = width;
+        bg.layer3X1 = 0;
+        bg.layer3X2 = width;
+        bg.img1 = nextImg1;
+        bg.img2 = nextImg2;
+        bg.img3 = nextImg3;
+        
+        inTransition = false;
+      }
+    }
+  
+  
+
 
   else if (state == 1) {
   
@@ -690,10 +761,13 @@ function determineNextBG(){
     nextImg3 = dim2Front[floor(random(0, dim2Front.length))];
   }
   else if(state==1){
+    
+   
     nextImg1 = dim1Back[floor(random(0, dim1Back.length))];
     nextImg2 = dim1Middle[floor(random(0, dim1Middle.length))];
     nextImg3 = dim1Front[floor(random(0, dim1Front.length))];
   }
+}
 
   class SpaceMan {
     constructor(x, y, bodySize, headSize, headColor, bodyColor, speed){
@@ -753,4 +827,5 @@ function determineNextBG(){
   
   
       }
-  }
+  
+}
