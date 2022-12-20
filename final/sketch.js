@@ -137,8 +137,9 @@ function CloudMode(){
     }
 
   if(frameCount % (interval * 30) == 0){
-      robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-  }
+     // robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+      robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+    }
 
   for(let i = robots.length - 1; i >= 0; i--){
   robots[i].move();
@@ -182,11 +183,11 @@ function CloudMode(){
 }
 
 function SpaceMode(){ 
-  background(0);
-  background(0);
+  
+  // background(0);
   imageMode(CORNER);
 
-  image(planet, 0, 0);
+ // image(planet, 0, 0);
   player.update();
   player.show();
 
@@ -415,6 +416,10 @@ class Robot {
   function visor(){
     return rect(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, this.headSize/2, 10);
   }
+
+  // function helmet(){
+  //   return rect(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, this.headSize/2, 15);
+  // }
   
   function twoEyes(){
     rect(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 6, 10);
@@ -564,4 +569,64 @@ class Robot {
       }
     }
   }
+  }
+
+  class SpaceMan {
+    constructor(x, y, bodySize, headSize, headColor, bodyColor, speed){
+      this.x = x;
+      this.y = y;
+      this.bodySize = bodySize;
+      this.headSize = headSize;
+      this.headColor = headColor;
+      this.bodyColor = bodyColor;
+      this.eyes = random(eyeArray);
+      this.Xspeed = speed;
+      this.Yspeed = speed;
+      this.mouth = random(mouthArr);
+   
+      
+
+      this.xNoiseOffset = random(0,1000);
+      this.yNoiseOffset = random(1000,2000);
+    }
+  
+    display() {
+        push();
+      rectMode(CENTER);
+      fill(255, 255, 255, 90);
+      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize+8, this.headSize+8);
+      fill(255);
+      rect(this.x, this.y, this.bodySize, this.bodySize, 10);
+      fill(this.bodyColor);
+     // rect(this.x, this.y, 10, , this.y);
+      fill(this.headColor);
+      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
+      fill(0, 0, 0, 90);
+      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize-2, this.headSize-10);
+      
+      fill(40);
+     // this.eyes();
+  //   ellipse(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, 30, 20);
+      
+     fill(255);
+     // this.mouth();
+     
+      pop();
+
+    }
+  
+    move(){
+        a = (128 + 128 * sin(millis() / 700));
+
+            let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+            // update our position
+            this.x -= this.Xspeed;
+            this.y += yMovement;
+
+            this.yNoiseOffset += 0.01;
+      }
+      checkCollision(){
+  
+  
+      }
   }
