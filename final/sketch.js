@@ -100,6 +100,11 @@ function setup() {
     bg.img2 = dim1Middle[floor(random(0, dim1Middle.length))];
     bg.img3 = dim1Front[floor(random(0, dim1Front.length))];
 
+    for(let i = 80; i >= 0; i--){
+      animatedRobots.push(new Robot(random(width+50, width+65), random(height*0.25, height*0.75), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 10));
+    }
+  
+
 }
 
 function draw() {
@@ -112,16 +117,18 @@ function draw() {
     else if (state == 1) {
       L2Mode();
     }
+    swarm.clear();
   
   }
 
   else {
     transitionMode();
-    image(swarm, 0, 0, 500, 500);
+   
+   
   }
-
- 
-
+  
+  image(swarm, 0, 0, 500, 500);
+  
 }
 
 
@@ -149,13 +156,15 @@ function L1Mode() {
   robots[i].display();
   
   
+
   if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
       robots.splice(i, 1);
       i = i - 1;
-  } 
-
+    } 
   }
 
+
+  
   player.update();
   player.show();
 
@@ -191,15 +200,6 @@ function L2Mode() {
   bg.display();
   bg.move();
 
-//   for(let i = 30; i >= 0; i--){
-//     background(0);
-//     // robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-//      robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-//  }
-
-  
-
-
 
   for(let i = arrowsArr.length - 1; i >= 0; i--){
     arrowsArr[i].display();
@@ -226,6 +226,8 @@ function L2Mode() {
 
   }
 
+  
+
   player.update();
   player.show();
 
@@ -236,8 +238,6 @@ function L2Mode() {
 
   for (let i = 0; i < platforms.length; i++) {
       platforms[i].display();
-
-
       platforms[i].y -=2.5;
       
 
@@ -407,15 +407,24 @@ class Robot {
   }
   displayAnimated() {
     push();
-  swarm.rectMode(CENTER);
-  swarm.fill(this.bodyColor);
-  swarm.rect(this.x, this.y, this.bodySize, this.bodySize);
-  swarm.fill(this.headColor);
-  swarm.rect(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
-  swarm.fill(255);
-  
-  pop();
+      swarm.rectMode(CENTER);
+      swarm.fill(this.bodyColor);
+      swarm.rect(this.x, this.y, this.bodySize, this.bodySize);
+      swarm.fill(this.headColor);
+      swarm.rect(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
+      swarm.fill(255);
+    pop();
 
+}
+moveAnimated(){
+ 
+
+  let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+  // update our position
+  this.x -= this.Xspeed;
+  this.y += yMovement;
+
+  this.yNoiseOffset += 0.01;
 }
 
   move(){
@@ -474,7 +483,6 @@ class Robot {
     mouth1
   ]
   
-  
   const eyeArray = [
     visor,
     twoEyes,
@@ -503,7 +511,6 @@ class Arrow {
   }
 }
   
-  
 function mousePressed() {
   // see if the user is clicking on the button
   for(let i = arrowsArr.length-1; i >=0;i--){
@@ -525,7 +532,6 @@ function mousePressed() {
         determineNextBG();
         inTransition = true;
       }
-
     }
   }
 }
@@ -550,8 +556,6 @@ class Background {
     // parallax background composed of 3 layers
     noStroke();
     imageMode(CORNER);
-   
-
 
     image(this.img1, this.layer1X1, this.y);
     image(this.img1, this.layer1X2, this.y);
@@ -650,33 +654,55 @@ function getColor(dr) {
   transColor = color(r, g, b);
 }
 
+function animation(){
+  if(animatedRobots.length != 0){
+    for(let i = animatedRobots.length-1; i >= 0; i--){
+      animatedRobots[i].moveAnimated();
+      noStroke();
+      animatedRobots[i].displayAnimated();
+      if(animatedRobots[i].x > width+100 || animatedRobots[i].x < -80 || animatedRobots[i].y > height || animatedRobots[i].y < -50){
+        animatedRobots.splice(i, 1);
+          i = i - 1;
+      }
+  
+  
+      
+    }
+    
+  } 
+}
+
 function transitionMode() {
 
   trig = false;
 
   player.show();
-  // swarm.background();
-  //swarm.clear();
+  //swarm.background(30);
+  // swarm.clear();
+  animation();
 
-  for(let i =  30; i >= 0; i--){
-    animatedRobots.push(new  Robot(random(width+50, width+65), random(height*0.25, height*0.75), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-     
-  }
+ 
 
-  for(let i =  animatedRobots-1; i >= 0; i--){
-    animatedRobots.push(new  Robot(random(width+50, width+65), random(height*0.25, height*0.75), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-      animatedRobots[i].move();
-      noStroke();
-      animatedRobots[i].displayAnimated();
+
+ 
+
+
+ 
+ 
+  // for(let i = animatedRobots-1; i >= 0; i--){
+  //     animatedRobots[i].move();
+  //     noStroke();
+  //     animatedRobots[i].displayAnimated();
 
   
-      if(animatedRobots[i].x > width+100 || animatedRobots[i].x < -80 || animatedRobots[i].y > height || animatedRobots[i].y < -50){
-        animatedRobots.splice(i, 1);
-          i = i - 1;
-    }
-  }
+  //     if(animatedRobots[i].x > width+100 || animatedRobots[i].x < -80 || animatedRobots[i].y > height || animatedRobots[i].y < -50){
+  //       animatedRobots.splice(i, 1);
+  //         i = i - 1;
+  //   }
+  // }
      console.log(animatedRobots.length);
-    if (state == 0 && animatedRobots.length == 0) {
+    if (state == 0) {
+      
       let tHeight = bg.y-height;
       noStroke();
       fill(transColor);
@@ -698,7 +724,7 @@ function transitionMode() {
         
       }  else {
 
-
+        
         state = 1;
         bg.y = 0;
         bg.layer1X1 = 0;
@@ -713,6 +739,7 @@ function transitionMode() {
         
         inTransition = false;
       }
+      
     }
   
   
@@ -750,6 +777,7 @@ function transitionMode() {
     }
 
   }
+ // image(swarm, 0, 0, 500, 500);
 
 
 }
