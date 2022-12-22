@@ -7,3 +7,4 @@ Remaining to do
 * make the player die when he hits a enemy 
 * create a "restart" page after dying 
 * add sound when you eat a coin (already in media file)
+* flip the arrow img upside down when in space mode

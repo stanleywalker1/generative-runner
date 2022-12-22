@@ -7,6 +7,7 @@ let bg;
 let bg1;
 let bg2;
 let bg3;
+let face;
 
 let dim1Front = [];
 let dim1Middle = [];
@@ -82,6 +83,7 @@ function preload() {
     downArrow = loadImage("media/down.png");
     upArrow = loadImage("media/up.png");
     coin = loadImage("media/coin.png");
+    face = loadImage("media/face.png");
   
 }
 
@@ -115,6 +117,7 @@ function setup() {
     }
 
     coin.resize(25, 25);
+    face.resize(32, 32);
 
     coinSpawn = new Coin(random(width+10, width+65), random(height*0.1, height), 1);
   
@@ -174,7 +177,7 @@ function L1andL2Mode(){
     inTransition = true;
   }
 
-  if(arrowsArr[i].x > width+100 || arrowsArr[i].x < -80 || arrowsArr[i].y > height || arrowsArr[i].y < -50){
+  if(arrowsArr[i].x < -80 || arrowsArr[i].y > height || arrowsArr[i].y < -50){
       arrowsArr.splice(i, 1);
       i = i - 1;
     } 
@@ -385,6 +388,7 @@ class Player {
     this.lift = -11;
     this.velocity = 0;
     this.size = 32;
+    this.graphic = face;
   }
 
   up() {
@@ -406,6 +410,8 @@ class Player {
     stroke(255, 255, 255, 70);
     strokeWeight(3);
     ellipse(this.x, this.y, this.size, this.size);
+    imageMode(CENTER);
+    image(face, this.x, this.y);
   }
 }
 
