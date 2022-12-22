@@ -12,9 +12,9 @@ let dim1Front = [];
 let dim1Middle = [];
 let dim1Back = [];
 
-let speed1 = 0.3;
-let speed2 = 0.5;
-let speed3 = 0.8;
+let speed1 = 1;
+let speed2 = 1;
+let speed3 = 1;
 
 let dim2Front = [];
 let dim2Middle = [];
@@ -34,6 +34,8 @@ let headPallete = [];
 let robots = [];
 let animatedRobots = [];
 let a = 128;
+let b = 128;
+let g = 128;
 let interval = 2;
 let swarm;
 
@@ -42,6 +44,10 @@ let downArrow, upArrow;
 let arrows = [];
 let arrowsArr = [];
 let arrow;
+
+let score = 0;
+let coin;
+let coinArr = [];
 
 
 function preload() {
@@ -73,16 +79,21 @@ function preload() {
       dim2Back[i] = loadImage("media/back/dim2/back" + i + ".png");
     }
 
-    downArrow = loadImage("media/arrow_down.png");
-    upArrow = loadImage("media/arrow_up.png");
+    downArrow = loadImage("media/down.png");
+    upArrow = loadImage("media/up.png");
+    coin = loadImage("media/coin.png");
   
 }
 
 function setup() {
     myCanvas = createCanvas(500, 500);
+    // myCanvas.style('width', '100%');
+    // myCanvas.style('height', '100%');
     myCanvas.parent("game_container");
 
     swarm = createGraphics(500, 500);
+    downArrow.resize(50, 50);
+    upArrow.resize(50, 50);
 
     bodyPallete = [color('#7400b8'), color('#e67e22'), color('#5e60ce'), color('#5390d9'), color('#4ea8de'), color('48bfe3,'), color('#56cfe1'), color('#64dfdf'), color('#72efdd'), color('#80ffdb')];
     headPallete = [color('#006d77'), color('#83c5be'), color('#f0f3bd'), color('#ffddd2'), color('#e29578')];
@@ -90,7 +101,6 @@ function setup() {
     arrows = [["up", upArrow], ["down", downArrow]];
 
     startArrow = arrows[0];
-    arrowsArr.push(new Arrow(64, 50, startArrow));
 
     player = new Player();
 
@@ -100,9 +110,13 @@ function setup() {
     bg.img2 = dim1Middle[floor(random(0, dim1Middle.length))];
     bg.img3 = dim1Front[floor(random(0, dim1Front.length))];
 
-    for(let i = 80; i >= 0; i--){
-      animatedRobots.push(new Robot(random(width+50, width+65), random(height*0.25, height*0.75), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 10));
+    for(let i = 20; i >= 0; i--){
+      animatedRobots.push(new Robot(random(width+10, width+65), random(height*0.1, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
     }
+
+    coin.resize(25, 25);
+
+    coinSpawn = new Coin(random(width+10, width+65), random(height*0.1, height), 1);
   
 
 }
@@ -118,20 +132,83 @@ function draw() {
       L2Mode();
     }
     swarm.clear();
-  
   }
 
   else {
     transitionMode();
-   
-   
   }
   
   image(swarm, 0, 0, 500, 500);
-  
+  L1andL2Mode();
 }
 
+function L1andL2Mode(){
+  push();
+  stroke(0);
+  strokeWeight(2);
+  textSize(18);
+  text("Score: " + score, 25, 45);
+  pop();
 
+  if(frameCount % 180 == 0){
+    arrowsArr.push(new Arrow(random(width+10, width+65), random(height*0.1, height), 1));
+    }
+
+  for(let i = arrowsArr.length - 1; i >= 0; i--){
+    arrowsArr[i].display();
+
+  let d = dist(arrowsArr[i].x, arrowsArr[i].y, player.x, player.y);
+  let m = map(d, 20, 200, 3, 0.1);
+
+  if (d < 200){
+    stroke(255);
+    strokeWeight(m);
+    line(arrowsArr[i].x, arrowsArr[i].y, player.x, player.y);
+  }
+
+  if (d < 20){  // if the robot is approaching the arrow, swap direction
+    arrowsArr.splice(i, 1);
+    score++;
+    getColor("top");
+    determineNextBG();
+    inTransition = true;
+  }
+
+  if(arrowsArr[i].x > width+100 || arrowsArr[i].x < -80 || arrowsArr[i].y > height || arrowsArr[i].y < -50){
+      arrowsArr.splice(i, 1);
+      i = i - 1;
+    } 
+  }
+
+  if(frameCount % 180 == 0){
+  coinArr.push(new Coin(random(width+10, width+65), random(height*0.1, height), 1));
+  }
+
+  for(let i = coinArr.length - 1; i >= 0; i--){
+    coinArr[i].displayAndMove();
+    // coinArr[i].checkCollision();
+    noStroke();
+    let d = dist(coinArr[i].x, coinArr[i].y, player.x, player.y);
+    let m = map(d, 20, 200, 3, 0.1);
+
+     if (d < 200){
+      stroke(255);
+      strokeWeight(m);
+      line(coinArr[i].x, coinArr[i].y, player.x, player.y);
+    }
+
+    if (d < 20){  // if the robot is approaching the arrow, swap direction
+      coinArr.splice(i, 1);
+      score++;
+    }
+    
+    if(coinArr[i].x > width+100 || coinArr[i].x < -80 || coinArr[i].y > height || coinArr[i].y < -50){
+        coinArr.splice(i, 1);
+        i = i - 1;
+      } 
+    }
+
+}
 
 function L1Mode() {
   background(0);
@@ -140,9 +217,9 @@ function L1Mode() {
   bg.display();
   bg.move();
 
-  for(let i = arrowsArr.length - 1; i >= 0; i--){
-      arrowsArr[i].display();
-    }
+  // for(let i = arrowsArr.length - 1; i >= 0; i--){
+  //     arrowsArr[i].display();
+  //   }
 
   if(frameCount % 180 == 0){
       robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
@@ -164,9 +241,6 @@ function L1Mode() {
   }
 
 
-  
-  player.update();
-  player.show();
 
   if (frameCount % 240 == 0) {
       temp = new Platform(random(width, width + 300), random(200, 400), random(160,200), 20);
@@ -181,22 +255,19 @@ function L1Mode() {
           platforms.splice(i, 1);
       }
 
-      if(player.x > platforms[i].x && player.x <= platforms[i].x + platforms[i].width && player.y -20< platforms[i].y){
-        floorY = platforms[i].y;
-      }
+      let floor = (platforms[i].y - player.size/2);  
+      if(player.x >= platforms[i].x && player.x <= platforms[i].x+platforms[i].width && player.y>= platforms[i].y-(player.size/2) && player.y <= platforms[i].y+platforms[i].height){
+        console.log("on platform");
+        player.velocity = 0; 
+        player.y = floor;
+    }  
 
-      line(player.x, player.y, platforms[i].x, platforms[i].y);
+     // line(player.x, player.y, platforms[i].x, platforms[i].y);
   }
 
   player.update();
   player.show();
 }
-
-  player.update();
-  player.show();
-}
-
-
 
 function L2Mode() { 
   background(0);
@@ -206,10 +277,10 @@ function L2Mode() {
   bg.move();
 
 
-  for(let i = arrowsArr.length - 1; i >= 0; i--){
-    arrowsArr[i].display();
+  // for(let i = arrowsArr.length - 1; i >= 0; i--){
+  //   arrowsArr[i].display();
     
-  }
+  // }
 
   if(frameCount % (interval * 30) == 0){
      // robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
@@ -221,8 +292,6 @@ function L2Mode() {
   robots[i].checkCollision();
   noStroke();
   robots[i].display();
-  
-
 
   if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
       robots.splice(i, 1);
@@ -231,24 +300,24 @@ function L2Mode() {
 
   }
 
-  if (frameCount % 180 == 0) {
-      temp = new Platform(random(30, width), random(height, height+20), 80, 40);
-      platforms.push(temp);
-  }
+  // if (frameCount % 180 == 0) {
+  //     temp = new Platform(random(30, width), random(height, height+20), 80, 40);
+  //     platforms.push(temp);
+  // }
 
-  for (let i = 0; i < platforms.length; i++) {
-      platforms[i].display();
-      platforms[i].y -=2.5;
+  // for (let i = 0; i < platforms.length; i++) {
+  //     platforms[i].display();
+  //     platforms[i].y -=2.5;
 
-      if(player.x > platforms[i].x && player.x < platforms[i].x+platforms[i].width && player.y > platforms[i].y && player.y < platforms[i].y+platforms[i].height){
-          player.velocity = 0;
-          player.y = platforms[i].y;
-      }
+  //     if(player.x > platforms[i].x && player.x < platforms[i].x+platforms[i].width && player.y > platforms[i].y && player.y < platforms[i].y+platforms[i].height){
+  //         player.velocity = 0;
+  //         player.y = platforms[i].y;
+  //     }
 
-      if (platforms[i].y < -100) {
-        platforms.splice(i, 1);
-      }
-  }
+  //     if (platforms[i].y < -100) {
+  //       platforms.splice(i, 1);
+  //     }
+  // }
 
   player.update();
   player.show();
@@ -258,6 +327,53 @@ function L2Mode() {
 function keyPressed() {
   if (key === ' ') {
     player.up();
+  }
+}
+
+function mousePressed() {
+  if (key === ' ') {
+    player.up();
+  }
+}
+
+function circRect(cx, cy, rad, rx, ry, rw, rh) {
+  let testX = cx;
+  let testY = cy;
+  
+  if (cx < rx)         testX = rx;      // test left edge
+  else if (cx > rx+rw) testX = rx+rw;   // right edge
+  if (cy < ry)         testY = ry;      // top edge
+  else if (cy > ry+rh) testY = ry+rh;   // bottom edge
+  
+  let d = dist(cx, cy, testX, testY);
+  
+    if (d <= rad) { 
+    return true;
+  }
+  return false;
+   
+}
+
+class Coin {
+  constructor(x, y, speed){
+    this.x = x;
+    this.y = y;
+    this.Xspeed = speed;
+    this.Yspeed = speed;
+    this.xNoiseOffset = random(0,1000);
+    this.yNoiseOffset = random(1000,2000);
+  }
+  displayAndMove(){
+    
+    imageMode(CENTER);
+    let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+    // update our position
+    this.x -= this.Xspeed;
+    this.y += yMovement;
+  
+    this.yNoiseOffset += 0.01;
+      
+    image(coin, this.x, this.y);
   }
 }
 
@@ -282,7 +398,7 @@ class Player {
     if (this.y + this.size/2 > floorY) {
       this.y = floorY - this.size/2;
       this.velocity = 0;
-    }
+    } 
   }
 
   show() {
@@ -293,23 +409,6 @@ class Player {
   }
 }
 
-function circRect(cx, cy, rad, rx, ry, rw, rh) {
-  let testX = cx;
-  let testY = cy;
-  
-  if (cx < rx)         testX = rx;      // test left edge
-  else if (cx > rx+rw) testX = rx+rw;   // right edge
-  if (cy < ry)         testY = ry;      // top edge
-  else if (cy > ry+rh) testY = ry+rh;   // bottom edge
-  
-  let d = dist(cx, cy, testX, testY);
-  
-    if (d <= rad) { 
-    return true;
-  }
-  return false;
-   
-}
 
 class Platform {
   constructor(x, y, w, h) {
@@ -324,11 +423,10 @@ class Platform {
 
 
   display() {
-      // Set the x position of the rectangle based on its horizontal speed and the amount of time that has elapsed
-      let xpos = 100 + (100 * cos(millis() / 1000));
-      
-      fill(this.red, this.green, this.blue);
 
+      fill(this.red, this.green, this.blue, 70);
+      stroke(255, 255, 255, 70); 
+      strokeWeight(3);
       rect(this.x, this.y, this.width, this.height);
 
       noFill();
@@ -345,8 +443,7 @@ class Platform {
           this.green = 120;
           this.blue = 200;
       }
-      stroke(255, 255, 255, 70);
-      strokeWeight(3);
+
   }
 
   move() {
@@ -399,6 +496,16 @@ class Robot {
     pop();
 
   }
+  move(){
+   
+
+    let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+    // update our position
+    this.x -= this.Xspeed;
+    this.y += yMovement;
+
+    this.yNoiseOffset += 0.01;
+  }
   displayAnimated() {
     push();
       swarm.rectMode(CENTER);
@@ -407,23 +514,12 @@ class Robot {
       swarm.fill(this.headColor);
       swarm.rect(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
       swarm.fill(255);
+      this.eyes();
+      this.mouth();
     pop();
 
-}
-moveAnimated(){
- 
-
-  let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
-  // update our position
-  this.x -= this.Xspeed;
-  this.y += yMovement;
-
-  this.yNoiseOffset += 0.01;
-}
-
-  move(){
-    a = (128 + 128 * sin(millis() / 700));
-
+  }
+  moveAnimated(){
     let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
     // update our position
     this.x -= this.Xspeed;
@@ -434,65 +530,52 @@ moveAnimated(){
 
   checkCollision(){
 
+    let d = dist(this.x, this.y, player.x, player.y);
+    let m = map(d, 20, 200, 3, 0.1);
+
+     if (d < 200){
+      stroke(255);
+      strokeWeight(m);
+      line(this.x, this.y, player.x, player.y);
+    }
+
+
+    if (d < 20){  // if the robot is approaching the arrow, swap direction
+     // score++;
+    }
 
   }
 }
 
-  function visor(){
-    return rect(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, this.headSize/2, 10);
-  }
 
-  // function helmet(){
-  //   return rect(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, this.headSize/2, 15);
-  // }
-  
-  function twoEyes(){
-    rect(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 6, 10);
-    rect(this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 6, 10);
-  }
-  
-  function glasses(){
-    fill(0);
-    ellipse(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 15, 10);
-    ellipse(this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 15, 10);
-  
-    stroke(0);
-    strokeWeight(2);
-    line(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2);
-  }
-  
-  function mouth(){
-    fill(255);
-    rect(this.x, this.y-this.bodySize/2-(this.headSize/3), this.headSize/2, 4);
-  }
-  
-  function mouth1(){
-    stroke(255);
-    fill(0);
-    rect(this.x, this.y-this.bodySize/2-(this.headSize/3), this.headSize/2, 4);
-  }
-  
-  const mouthArr = [
-    mouth,
-    mouth1
-  ]
-  
-  const eyeArray = [
-    visor,
-    twoEyes,
-    glasses
-  ]
 
 class Arrow {
-  constructor(x, y, startArrow){
+  constructor(x, y, speed){
     this.x = x;
     this.y = y;
-    this.dir = startArrow[0];
-    this.graphic = startArrow[1];
+    this.graphic = upArrow;
+    this.Xspeed = speed;
+    this.Yspeed = speed;
+
+    this.xNoiseOffset = random(0,1000);
+    this.yNoiseOffset = random(1000,2000);
   }
 
   display(){
-    image(this.graphic, this.x, this.y);
+    g = (128 * sin(millis() / 700));
+    b = (128 + 128 * sin(millis() / 700));
+    let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+    this.x -= this.Xspeed;
+    this.y += yMovement;
+    this.yNoiseOffset += 0.01;
+    
+    push();
+    imageMode(CENTER);
+    fill(g, 255, b);
+    ellipse(this.x, this.y, 54, 54);
+    
+    image(upArrow, this.x, this.y);
+     pop();
   }
 
   checkClick(testX, testY) {
@@ -504,32 +587,7 @@ class Arrow {
     }
   }
 }
-  
-function mousePressed() {
-  // see if the user is clicking on the button
-  for(let i = arrowsArr.length-1; i >=0;i--){
-  let clicked = arrowsArr[i].checkClick(mouseX, mouseY);
-
-    if (clicked == true) {
-
-      if(arrowsArr[i].dir=="up"){
-        arrowsArr[i].graphic = downArrow;
-        arrowsArr[i].dir = "down";
-        getColor("top");
-        determineNextBG();
-        inTransition = true;
-      }
-      else if(arrowsArr[i].dir=="down"){
-        arrowsArr[i].graphic = upArrow;
-        arrowsArr[i].dir = "up";
-        getColor("bottom");
-        determineNextBG();
-        inTransition = true;
-      }
-    }
-  }
-}
-
+ 
 class Background {
   constructor(img1, img2, img3){    
     this.img1 = img1;
@@ -617,6 +675,164 @@ class Background {
 
 }
 
+  class SpaceMan {
+    constructor(x, y, bodySize, headSize, headColor, bodyColor, speed){
+      this.x = x;
+      this.y = y;
+      this.bodySize = bodySize;
+      this.headSize = headSize;
+      this.headColor = headColor;
+      this.bodyColor = bodyColor;
+      this.eyes = random(eyeArray);
+      this.Xspeed = speed;
+      this.Yspeed = speed;
+      this.mouth = random(mouthArr);
+   
+      
+
+      this.xNoiseOffset = random(0,1000);
+      this.yNoiseOffset = random(1000,2000);
+    }
+  
+    display() {
+      a = (128 + 128 * sin(millis() / 700));
+
+      push();
+      rectMode(CORNER);
+      stroke(170, 0, 0);
+      strokeWeight(4);
+      line(this.x-2, this.y,this.x+34, this.y-41); 
+      stroke(0);
+      strokeWeight(1);
+      fill(255, 255, 0, a);
+      ellipse(this.x+37, this.y-44, 10, 10);
+      pop();
+      push();
+      rectMode(CENTER);
+      fill(255, 255, 255, 90);
+      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize+8, this.headSize+8);
+      fill(255);
+      rect(this.x, this.y, this.bodySize, this.bodySize, 10);
+      fill(this.bodyColor);
+      fill(this.headColor);
+      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
+      fill(0, 0, 0, 90);
+      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize-2, this.headSize-10);
+      pop();
+
+    }
+  
+    move(){
+      a = (128 + 128 * sin(millis() / 700));
+
+      let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+      // update our position
+      this.x -= this.Xspeed;
+      this.y += yMovement;
+
+      this.yNoiseOffset += 0.01;
+      }
+
+      displayAnimated() {
+        a = (128 + 128 * sin(millis() / 700));
+
+        push();
+        swarm.rectMode(CORNER);
+        swarm.stroke(170, 0, 0);
+        swarm.strokeWeight(4);
+        swarm.line(this.x-2, this.y,this.x+34, this.y-41); 
+        swarm.stroke(0);
+        swarm.strokeWeight(1);
+        swarm.fill(255, 255, 0, a);
+        swarm.ellipse(this.x+37, this.y-44, 10, 10);
+        swarm.pop();
+        swarm.push();
+        swarm.rectMode(CENTER);
+        swarm.fill(255, 255, 255, 90);
+        swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize+8, this.headSize+8);
+        swarm.fill(255);
+        swarm.rect(this.x, this.y, this.bodySize, this.bodySize, 10);
+        swarm.fill(this.bodyColor);
+        swarm.fill(this.headColor);
+        swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
+        swarm.fill(0, 0, 0, 90);
+        swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize-2, this.headSize-10);
+        pop();
+    
+      }
+      moveAnimated(){
+        let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+        // update our position
+        this.x -= this.Xspeed;
+        this.y += yMovement;
+    
+        this.yNoiseOffset += 0.01;
+      }
+      checkCollision(){
+  
+  
+      }
+  
+}
+
+function visor(){
+  rect(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, this.headSize/2, 10);
+  swarm.rect(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, this.headSize/2, 10);
+}
+
+
+function twoEyes(){
+  rect(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 6, 10);
+  rect(this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 6, 10);
+  swarm.rect(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 6, 10);
+  swarm.rect(this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 6, 10);
+}
+
+function glasses(){
+  fill(0);
+  ellipse(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 15, 10);
+  ellipse(this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 15, 10);
+
+  stroke(0);
+  strokeWeight(2);
+  line(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2);
+
+  swarm.fill(0);
+  swarm.ellipse(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 15, 10);
+  swarm.ellipse(this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 15, 10);
+
+  swarm.stroke(0);
+  swarm.strokeWeight(2);
+  swarm.line(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, this.x+this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2);
+}
+
+function mouth(){
+  fill(255);
+  rect(this.x, this.y-this.bodySize/2-(this.headSize/3), this.headSize/2, 4);
+  swarm.fill(255);
+  swarm.rect(this.x, this.y-this.bodySize/2-(this.headSize/3), this.headSize/2, 4);
+}
+
+function mouth1(){
+  stroke(255);
+  fill(0);
+  rect(this.x, this.y-this.bodySize/2-(this.headSize/3), this.headSize/2, 4);
+  swarm.stroke(255);
+  swarm.fill(0);
+  swarm.rect(this.x, this.y-this.bodySize/2-(this.headSize/3), this.headSize/2, 4);
+}
+
+const mouthArr = [
+  mouth,
+  mouth1
+]
+
+const eyeArray = [
+  visor,
+  twoEyes,
+  glasses
+]
+
 function getColor(dr) {
   // get average color of the top of the screen
   let r = 0;
@@ -646,6 +862,8 @@ function getColor(dr) {
 }
 
 function animation(){
+
+
   if(animatedRobots.length != 0){
     for(let i = animatedRobots.length-1; i >= 0; i--){
       animatedRobots[i].moveAnimated();
@@ -660,37 +878,19 @@ function animation(){
       
     }
     
-  } 
+  } else {
+    swarm.clear();
+  }
 }
 
 function transitionMode() {
 
-  trig = false;
+
 
   player.show();
-  //swarm.background(30);
-  // swarm.clear();
+
   animation();
 
- 
-
-
- 
-
-
- 
- 
-  // for(let i = animatedRobots-1; i >= 0; i--){
-  //     animatedRobots[i].move();
-  //     noStroke();
-  //     animatedRobots[i].displayAnimated();
-
-  
-  //     if(animatedRobots[i].x > width+100 || animatedRobots[i].x < -80 || animatedRobots[i].y > height || animatedRobots[i].y < -50){
-  //       animatedRobots.splice(i, 1);
-  //         i = i - 1;
-  //   }
-  // }
      console.log(animatedRobots.length);
     if (state == 0) {
       
@@ -707,14 +907,14 @@ function transitionMode() {
         image(nextImg1, 0, tHeight - height, width, height);  
         image(nextImg2, 0, tHeight - height, width, height);
         image(nextImg3, 0, tHeight - height, width, height);
-       
-      
-  
-  
-  
+
         
       }  else {
 
+        for(let i = 20; i >= 0; i--){
+          animatedRobots.push(new Robot(random(width+10, width+65), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
+        }
+        
         
         state = 1;
         bg.y = 0;
@@ -732,11 +932,9 @@ function transitionMode() {
       }
       
     }
-  
-  
-
 
   else if (state == 1) {
+   
   
     let tHeight = bg.y+height;
     noStroke();
@@ -753,6 +951,10 @@ function transitionMode() {
     }
 
     else {
+      for(let i = 20; i >= 0; i--){
+        animatedRobots.push(new SpaceMan(random(width+10, width+65), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
+      }
+
       state = 0;
       bg.y = 0;
       bg.layer1X1 = 0;
@@ -768,8 +970,6 @@ function transitionMode() {
     }
 
   }
- // image(swarm, 0, 0, 500, 500);
-
 
 }
 
@@ -786,65 +986,4 @@ function determineNextBG(){
     nextImg2 = dim1Middle[floor(random(0, dim1Middle.length))];
     nextImg3 = dim1Front[floor(random(0, dim1Front.length))];
   }
-}
-
-  class SpaceMan {
-    constructor(x, y, bodySize, headSize, headColor, bodyColor, speed){
-      this.x = x;
-      this.y = y;
-      this.bodySize = bodySize;
-      this.headSize = headSize;
-      this.headColor = headColor;
-      this.bodyColor = bodyColor;
-      this.eyes = random(eyeArray);
-      this.Xspeed = speed;
-      this.Yspeed = speed;
-      this.mouth = random(mouthArr);
-   
-      
-
-      this.xNoiseOffset = random(0,1000);
-      this.yNoiseOffset = random(1000,2000);
-    }
-  
-    display() {
-        push();
-      rectMode(CENTER);
-      fill(255, 255, 255, 90);
-      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize+8, this.headSize+8);
-      fill(255);
-      rect(this.x, this.y, this.bodySize, this.bodySize, 10);
-      fill(this.bodyColor);
-     // rect(this.x, this.y, 10, , this.y);
-      fill(this.headColor);
-      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
-      fill(0, 0, 0, 90);
-      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize-2, this.headSize-10);
-      
-      fill(40);
-     // this.eyes();
-  //   ellipse(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, 30, 20);
-      
-     fill(255);
-     // this.mouth();
-     
-      pop();
-
-    }
-  
-    move(){
-        a = (128 + 128 * sin(millis() / 700));
-
-            let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
-            // update our position
-            this.x -= this.Xspeed;
-            this.y += yMovement;
-
-            this.yNoiseOffset += 0.01;
-      }
-      checkCollision(){
-  
-  
-      }
-  
 }
