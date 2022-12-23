@@ -235,7 +235,7 @@ function L1andL2Mode(){
       coinArr.splice(i, 1);
       coinAudio.play();
       score++;
-      document.getElementById("scoreText").innerHTML = currentClicks;
+   //   document.getElementById("scoreText").innerHTML = currentClicks;
     }
     
     if(coinArr[i].x > width+100 || coinArr[i].x < -80 || coinArr[i].y > height || coinArr[i].y < -50){
