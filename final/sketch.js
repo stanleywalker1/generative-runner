@@ -1,3 +1,4 @@
+// GLOBAL VARIABLES
 let platforms = [];
 let leftWall = -500;
 let state = 0;
@@ -14,8 +15,8 @@ let dim1Middle = [];
 let dim1Back = [];
 
 let speed1 = 1;
-let speed2 = 1;
-let speed3 = 1;
+let speed2 = 2;
+let speed3 = 3;
 
 let dim2Front = [];
 let dim2Middle = [];
@@ -40,17 +41,19 @@ let g = 128;
 let interval = 2;
 let swarm;
 
-
 let downArrow, upArrow;
-let arrows = [];
 let arrowsArr = [];
 let arrow;
+let arrGr;
 
 let score = 0;
 let coin;
 let coinArr = [];
+let coinAudio;
 
 
+
+// GAMEPLAY FUNCTIONS
 function preload() {
 
     // FRONT IMAGES
@@ -84,10 +87,14 @@ function preload() {
     upArrow = loadImage("media/up.png");
     coin = loadImage("media/coin.png");
     face = loadImage("media/face.png");
+
+    coinAudio = loadSound("media/stan_coin.wav");
   
 }
 
+
 function setup() {
+
     myCanvas = createCanvas(500, 500);
     // myCanvas.style('width', '100%');
     // myCanvas.style('height', '100%');
@@ -97,12 +104,10 @@ function setup() {
     downArrow.resize(50, 50);
     upArrow.resize(50, 50);
 
+    arrGr = upArrow;
+
     bodyPallete = [color('#7400b8'), color('#e67e22'), color('#5e60ce'), color('#5390d9'), color('#4ea8de'), color('48bfe3,'), color('#56cfe1'), color('#64dfdf'), color('#72efdd'), color('#80ffdb')];
     headPallete = [color('#006d77'), color('#83c5be'), color('#f0f3bd'), color('#ffddd2'), color('#e29578')];
-
-    arrows = [["up", upArrow], ["down", downArrow]];
-
-    startArrow = arrows[0];
 
     player = new Player();
 
@@ -113,7 +118,7 @@ function setup() {
     bg.img3 = dim1Front[floor(random(0, dim1Front.length))];
 
     for(let i = 20; i >= 0; i--){
-      animatedRobots.push(new Robot(random(width+10, width+65), random(height*0.1, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
+      animatedRobots.push(new SpaceMan(random(width+10, width+65), random(height*0.1, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
     }
 
     coin.resize(25, 25);
@@ -121,31 +126,40 @@ function setup() {
 
     coinSpawn = new Coin(random(width+10, width+65), random(height*0.1, height), 1);
   
-
 }
+
 
 function draw() {
 
-  if (inTransition == false) {
+  if (state == 0 || state == 1){
 
-    if (state == 0) {
-      L1Mode();
+    if (inTransition == false) {
+      if (state == 0) {
+        L1Mode();
+      }
+      else if (state == 1) {
+        L2Mode();
+      }
+      swarm.clear();
+      L1andL2Mode();
     }
-    else if (state == 1) {
-      L2Mode();
+
+    else {
+      transitionMode();
     }
-    swarm.clear();
+
+    image(swarm, 0, 0, 500, 500);    
   }
 
-  else {
-    transitionMode();
+  else if (state == 2) {
+    restart();
   }
-  
-  image(swarm, 0, 0, 500, 500);
-  L1andL2Mode();
+
 }
 
+
 function L1andL2Mode(){
+
   push();
   stroke(0);
   strokeWeight(2);
@@ -153,38 +167,45 @@ function L1andL2Mode(){
   text("Score: " + score, 25, 45);
   pop();
 
-  if(frameCount % 180 == 0){
-    arrowsArr.push(new Arrow(random(width+10, width+65), random(height*0.1, height), 1));
-    }
+  // ARROW PRODUCTION 
+  if(frameCount % 360 == 0){
+    arrowsArr.push(new Arrow(random(width+10, width+65), random(10, 300), random(1, 3), arrGr));
+  }
 
   for(let i = arrowsArr.length - 1; i >= 0; i--){
     arrowsArr[i].display();
 
-  let d = dist(arrowsArr[i].x, arrowsArr[i].y, player.x, player.y);
-  let m = map(d, 20, 200, 3, 0.1);
+    let d = dist(arrowsArr[i].x, arrowsArr[i].y, player.x, player.y);
+    let m = map(d, 20, 200, 3, 0.1);
 
-  if (d < 200){
-    stroke(255);
-    strokeWeight(m);
-    line(arrowsArr[i].x, arrowsArr[i].y, player.x, player.y);
-  }
+    if (d < 200){
+      stroke(255);
+      strokeWeight(m);
+    }
 
-  if (d < 20){  // if the robot is approaching the arrow, swap direction
-    arrowsArr.splice(i, 1);
-    score++;
-    getColor("top");
-    determineNextBG();
-    inTransition = true;
-  }
-
-  if(arrowsArr[i].x < -80 || arrowsArr[i].y > height || arrowsArr[i].y < -50){
+    if(arrowsArr[i].x < -80 || arrowsArr[i].y > height || arrowsArr[i].y < -50){
       arrowsArr.splice(i, 1);
       i = i - 1;
     } 
+
+    if (d < 20){  // if the robot is approaching the arrow, swap direction
+      arrowsArr.splice(i, 1);
+      score++;
+      if (state == 0){
+        getColor("top");
+      }
+      else if (state == 1){
+        getColor("bottom");
+      }
+      determineNextBG();
+      inTransition = true;
+    }
+
   }
 
+  // COIN PRODUCTION
   if(frameCount % 180 == 0){
-  coinArr.push(new Coin(random(width+10, width+65), random(height*0.1, height), 1));
+  coinArr.push(new Coin(random(width+10, width+65), random(10, 300), 1));
   }
 
   for(let i = coinArr.length - 1; i >= 0; i--){
@@ -197,11 +218,11 @@ function L1andL2Mode(){
      if (d < 200){
       stroke(255);
       strokeWeight(m);
-      line(coinArr[i].x, coinArr[i].y, player.x, player.y);
     }
 
     if (d < 20){  // if the robot is approaching the arrow, swap direction
       coinArr.splice(i, 1);
+      coinAudio.play();
       score++;
     }
     
@@ -209,48 +230,16 @@ function L1andL2Mode(){
         coinArr.splice(i, 1);
         i = i - 1;
       } 
-    }
-
-}
-
-function L1Mode() {
-  background(0);
-  imageMode(CORNER);
-
-  bg.display();
-  bg.move();
-
-  // for(let i = arrowsArr.length - 1; i >= 0; i--){
-  //     arrowsArr[i].display();
-  //   }
-
-  if(frameCount % 180 == 0){
-      robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-    //  robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-    }
-
-  for(let i = robots.length - 1; i >= 0; i--){
-  robots[i].move();
-  robots[i].checkCollision();
-  noStroke();
-  robots[i].display();
-  
-  
-
-  if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
-      robots.splice(i, 1);
-      i = i - 1;
-    } 
   }
 
-
-
+  // PLATFORM PRODUCTION
   if (frameCount % 240 == 0) {
-      temp = new Platform(random(width, width + 300), random(200, 400), random(160,200), 20);
-      platforms.push(temp);
+    temp = new Platform(random(width, width + 300), random(200, 400), random(160,200), 20);
+    platforms.push(temp);
   }
 
-  for (let i = 0; i < platforms.length; i++) {
+  if (platforms.length > 0){
+    for (let i = 0; i < platforms.length; i++) {
       platforms[i].display();
       platforms[i].move();
 
@@ -260,84 +249,275 @@ function L1Mode() {
 
       let floor = (platforms[i].y - player.size/2);  
       if(player.x >= platforms[i].x && player.x <= platforms[i].x+platforms[i].width && player.y>= platforms[i].y-(player.size/2) && player.y <= platforms[i].y+platforms[i].height){
-        console.log("on platform");
         player.velocity = 0; 
         player.y = floor;
-    }  
-
-     // line(player.x, player.y, platforms[i].x, platforms[i].y);
+      }  
+    }
   }
 
-  player.update();
-  player.show();
 }
 
-function L2Mode() { 
+
+// ON LAND MODE
+function L1Mode() {
+
   background(0);
   imageMode(CORNER);
 
   bg.display();
   bg.move();
 
-
-  // for(let i = arrowsArr.length - 1; i >= 0; i--){
-  //   arrowsArr[i].display();
-    
-  // }
-
-  if(frameCount % (interval * 30) == 0){
-     // robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
-      robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 2));
+  if(frameCount % 180 == 0){
+      robots.push(new Robot(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), random(7, 10)));
   }
 
   for(let i = robots.length - 1; i >= 0; i--){
-  robots[i].move();
-  robots[i].checkCollision();
-  noStroke();
-  robots[i].display();
+    robots[i].move();
+    robots[i].checkCollision();
+    noStroke();
+    robots[i].display();
 
-  if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
-      robots.splice(i, 1);
-      i = i - 1;
-  } 
-
+    if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
+        robots.splice(i, 1);
+        i = i - 1;
+    }
   }
-
-  // if (frameCount % 180 == 0) {
-  //     temp = new Platform(random(30, width), random(height, height+20), 80, 40);
-  //     platforms.push(temp);
-  // }
-
-  // for (let i = 0; i < platforms.length; i++) {
-  //     platforms[i].display();
-  //     platforms[i].y -=2.5;
-
-  //     if(player.x > platforms[i].x && player.x < platforms[i].x+platforms[i].width && player.y > platforms[i].y && player.y < platforms[i].y+platforms[i].height){
-  //         player.velocity = 0;
-  //         player.y = platforms[i].y;
-  //     }
-
-  //     if (platforms[i].y < -100) {
-  //       platforms.splice(i, 1);
-  //     }
-  // }
 
   player.update();
   player.show();
 
 }
 
+
+// IN SPACE MODE
+function L2Mode() { 
+
+  background(0);
+  imageMode(CORNER);
+
+  bg.display();
+  bg.move();
+
+  if(frameCount % 180 == 0){
+      robots.push(new SpaceMan(width+50, height/2, random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), random(7, 10)));
+  }
+
+  for(let i = robots.length - 1; i >= 0; i--){
+    robots[i].move();
+    robots[i].checkCollision();
+    noStroke();
+    robots[i].display();
+
+    if(robots[i].x > width+100 || robots[i].x < -80 || robots[i].y > height || robots[i].y < -50){
+        robots.splice(i, 1);
+        i = i - 1;
+    } 
+  }
+
+  player.update();
+  player.show();
+
+}
+
+
+function getColor(dr) {
+
+  // get average color of the top of the screen
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  for(let i = 0; i < 500; i++){
+    if (dr == "top") {
+      let c = get(i, 1);
+      r += red(c);
+      g += green(c);
+      b += blue(c);
+    }
+
+    else if (dr == "bottom") {
+      let c = get(i, 499);
+      r += red(c);
+      g += green(c);
+      b += blue(c);
+    }
+  }
+
+  r = r/500;
+  g = g/500;
+  b = b/500;
+
+  transColor = color(r, g, b);
+
+}
+
+
+function animation(){
+
+  if(animatedRobots.length != 0){
+    for(let i = animatedRobots.length-1; i >= 0; i--){
+      animatedRobots[i].moveAnimated();
+      noStroke();
+      animatedRobots[i].displayAnimated();
+      if(animatedRobots[i].x < -30 || animatedRobots[i].y > height || animatedRobots[i].y < -30){
+        animatedRobots.splice(i, 1);
+          i = i - 1;
+      }
+    }
+  } 
+  
+  else {
+    swarm.clear();
+  }
+
+}
+
+
+function transitionMode() {
+
+  player.show();
+  animation();
+
+  if (state == 0) {
+    let tHeight = bg.y-height;
+    noStroke();
+    fill(transColor);
+
+    if (tHeight < height){
+    
+      rect(0, tHeight, width, height);
+      bg.transition("up");
+      bg.display();
+      
+      image(nextImg1, 0, tHeight - height, width, height);  
+      image(nextImg2, 0, tHeight - height, width, height);
+      image(nextImg3, 0, tHeight - height, width, height);      
+    }  
+    
+    else {
+      for(let i = 20; i >= 0; i--){
+        animatedRobots.push(new Robot(random(width+10, width+65), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
+      }
+      
+      state = 1;
+      arrGr = downArrow;
+      bg.y = 0;
+      bg.layer1X1 = 0;
+      bg.layer1X2 = width;
+      bg.layer2X1 = 0;
+      bg.layer2X2 = width;
+      bg.layer3X1 = 0;
+      bg.layer3X2 = width;
+      bg.img1 = nextImg1;
+      bg.img2 = nextImg2;
+      bg.img3 = nextImg3;
+      platforms = [];
+      robots = [];
+      coinArr = [];
+      arrowsArr = [];
+      inTransition = false;
+    }
+      
+  }
+
+  else if (state == 1) {
+    let tHeight = bg.y+height;
+    noStroke();
+    fill(transColor);
+
+    if (tHeight > -height){
+      rect(0, tHeight, width, height);
+      bg.transition("down");
+      bg.display();
+      image(nextImg1, 0, tHeight + height, width, height);
+      image(nextImg2, 0, tHeight + height, width, height);
+      image(nextImg3, 0, tHeight + height, width, height);
+      player.show();
+    }
+
+    else {
+      for(let i = 20; i >= 0; i--){
+        animatedRobots.push(new SpaceMan(random(width+10, width+65), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
+      }
+
+      state = 0;
+      arrGr = upArrow
+      bg.y = 0;
+      bg.layer1X1 = 0;
+      bg.layer1X2 = width;
+      bg.layer2X1 = 0;
+      bg.layer2X2 = width;
+      bg.layer3X1 = 0;
+      bg.layer3X2 = width;
+      bg.img1 = nextImg1;
+      bg.img2 = nextImg2;
+      bg.img3 = nextImg3;
+      platforms = [];
+      robots = [];
+      coinArr = [];
+      arrowsArr = [];
+      inTransition = false;
+    }
+  }
+
+}
+
+
+function determineNextBG(){
+
+  if(state==0){
+    nextImg1 = dim2Back[floor(random(0, dim2Back.length))];
+    nextImg2 = dim2Middle[floor(random(0, dim2Middle.length))];
+    nextImg3 = dim2Front[floor(random(0, dim2Front.length))];
+  }
+  else if(state==1){   
+    nextImg1 = dim1Back[floor(random(0, dim1Back.length))];
+    nextImg2 = dim1Middle[floor(random(0, dim1Middle.length))];
+    nextImg3 = dim1Front[floor(random(0, dim1Front.length))];
+  }
+
+}
+
+
+function restart(){
+
+  background(0);
+  textSize(20);
+  fill(255);
+  text("Your score: " + score, 180, 200);
+  text("Press 'S' key to restart", 150, 300);
+
+  if(keyIsDown(83)){
+    score = 0;
+    player.y = floorY;
+    bg = new Background();
+    bg.img1 = dim1Back[floor(random(0, dim1Back.length))];
+    bg.img2 = dim1Middle[floor(random(0, dim1Middle.length))];
+    bg.img3 = dim1Front[floor(random(0, dim1Front.length))];
+    inTransition = false;
+    state = 0;
+    robots = [];
+    platforms = [];
+    coinArray = [];
+    determineNextBG();
+  }
+
+}
+
+
+// CONTROL HANDLING
 function keyPressed() {
   if (key === ' ') {
     player.up();
   }
 }
 
+
 function mousePressed() {
   if (key === ' ') {
     player.up();
   }
 }
+
 
 function circRect(cx, cy, rad, rx, ry, rw, rh) {
   let testX = cx;
@@ -357,6 +537,9 @@ function circRect(cx, cy, rad, rx, ry, rw, rh) {
    
 }
 
+
+
+// CLASSES
 class Coin {
   constructor(x, y, speed){
     this.x = x;
@@ -379,6 +562,7 @@ class Coin {
     image(coin, this.x, this.y);
   }
 }
+
 
 class Player {
   constructor() {
@@ -457,19 +641,6 @@ class Platform {
   }
 }
 
-class Enemy {
-  constructor() {
-      this.x = 0;
-      this.y = 0;
-      this.speed = 0;
-  }
-  
-  display() {
-      fill(255);
-      rect(this.x, this.y, this.width, this.height);
-  }
-}
-
 
 class Robot {
   constructor(x, y, bodySize, headSize, headColor, bodyColor, speed){
@@ -483,13 +654,12 @@ class Robot {
     this.Xspeed = speed;
     this.Yspeed = speed;
     this.mouth = random(mouthArr);
-
     this.xNoiseOffset = random(0,1000);
     this.yNoiseOffset = random(1000,2000);
   }
 
   display() {
-      push();
+    push();
     rectMode(CENTER);
     fill(this.bodyColor);
     rect(this.x, this.y, this.bodySize, this.bodySize);
@@ -497,14 +667,10 @@ class Robot {
     rect(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
     fill(255);
     this.eyes();
-    
     this.mouth();
     pop();
-
   }
   move(){
-   
-
     let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
     // update our position
     this.x -= this.Xspeed;
@@ -527,7 +693,6 @@ class Robot {
   }
   moveAnimated(){
     let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
-    // update our position
     this.x -= this.Xspeed;
     this.y += yMovement;
 
@@ -535,31 +700,114 @@ class Robot {
   }
 
   checkCollision(){
-
-    let d = dist(this.x, this.y, player.x, player.y);
-    let m = map(d, 20, 200, 3, 0.1);
-
-     if (d < 200){
-      stroke(255);
-      strokeWeight(m);
-      line(this.x, this.y, player.x, player.y);
+    if (dist(this.x, this.y, player.x, player.y) < 50) {
+      state = 2;
     }
-
-
-    if (d < 20){  // if the robot is approaching the arrow, swap direction
-     // score++;
-    }
-
   }
 }
 
 
-
-class Arrow {
-  constructor(x, y, speed){
+class SpaceMan {
+  constructor(x, y, bodySize, headSize, headColor, bodyColor, speed){
     this.x = x;
     this.y = y;
-    this.graphic = upArrow;
+    this.bodySize = bodySize;
+    this.headSize = headSize;
+    this.headColor = headColor;
+    this.bodyColor = bodyColor;
+    this.eyes = random(eyeArray);
+    this.Xspeed = speed;
+    this.Yspeed = speed;
+    this.mouth = random(mouthArr);
+  
+    this.xNoiseOffset = random(0,1000);
+    this.yNoiseOffset = random(1000,2000);
+  }
+
+  display() {
+    a = (128 + 128 * sin(millis() / 700));
+
+    push();
+    rectMode(CORNER);
+    stroke(170, 0, 0);
+    strokeWeight(4);
+    line(this.x-2, this.y,this.x+34, this.y-41); 
+    stroke(0);
+    strokeWeight(1);
+    fill(255, 255, 0, a);
+    ellipse(this.x+37, this.y-44, 10, 10);
+    rectMode(CENTER);
+    fill(255, 255, 255, 90);
+    ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize+8, this.headSize+8);
+    fill(255);
+    rect(this.x, this.y, this.bodySize, this.bodySize, 10);
+    fill(this.bodyColor);
+    fill(this.headColor);
+    ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
+    fill(0, 0, 0, 90);
+    ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize-2, this.headSize-10);
+    pop();
+
+  }
+
+  move(){
+    a = (128 + 128 * sin(millis() / 700));
+
+    let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+    // update our position
+    this.x -= this.Xspeed;
+    this.y += yMovement;
+
+    this.yNoiseOffset += 0.01;
+  }
+
+  displayAnimated() {
+    a = (128 + 128 * sin(millis() / 700));
+
+    push();
+    swarm.rectMode(CORNER);
+    swarm.stroke(170, 0, 0);
+    swarm.strokeWeight(4);
+    swarm.line(this.x-2, this.y,this.x+34, this.y-41); 
+    swarm.stroke(0);
+    swarm.strokeWeight(1);
+    swarm.fill(255, 255, 0, a);
+    swarm.ellipse(this.x+37, this.y-44, 10, 10);
+    swarm.rectMode(CENTER);
+    swarm.fill(255, 255, 255, 90);
+    swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize+8, this.headSize+8);
+    swarm.fill(255);
+    swarm.rect(this.x, this.y, this.bodySize, this.bodySize, 10);
+    swarm.fill(this.bodyColor);
+    swarm.fill(this.headColor);
+    swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
+    swarm.fill(0, 0, 0, 90);
+    swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize-2, this.headSize-10);
+    pop();
+
+  }
+  moveAnimated(){
+    let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
+    // update our position
+    this.x -= this.Xspeed;
+    this.y += yMovement;
+
+    this.yNoiseOffset += 0.01;
+  }
+  checkCollision(){
+    if(dist(this.x, this.y, player.x, player.y) < 50){
+      state = 2;
+    }
+  }
+
+}
+
+
+class Arrow {
+  constructor(x, y, speed, graphic){
+    this.x = x;
+    this.y = y;
+    this.graphic = graphic;
     this.Xspeed = speed;
     this.Yspeed = speed;
 
@@ -579,9 +827,9 @@ class Arrow {
     imageMode(CENTER);
     fill(g, 255, b);
     ellipse(this.x, this.y, 54, 54);
-    
-    image(upArrow, this.x, this.y);
-     pop();
+    image(this.graphic, this.x, this.y);
+    pop();
+
   }
 
   checkClick(testX, testY) {
@@ -594,6 +842,7 @@ class Arrow {
   }
 }
  
+
 class Background {
   constructor(img1, img2, img3){    
     this.img1 = img1;
@@ -681,111 +930,12 @@ class Background {
 
 }
 
-  class SpaceMan {
-    constructor(x, y, bodySize, headSize, headColor, bodyColor, speed){
-      this.x = x;
-      this.y = y;
-      this.bodySize = bodySize;
-      this.headSize = headSize;
-      this.headColor = headColor;
-      this.bodyColor = bodyColor;
-      this.eyes = random(eyeArray);
-      this.Xspeed = speed;
-      this.Yspeed = speed;
-      this.mouth = random(mouthArr);
-   
-      
 
-      this.xNoiseOffset = random(0,1000);
-      this.yNoiseOffset = random(1000,2000);
-    }
-  
-    display() {
-      a = (128 + 128 * sin(millis() / 700));
-
-      push();
-      rectMode(CORNER);
-      stroke(170, 0, 0);
-      strokeWeight(4);
-      line(this.x-2, this.y,this.x+34, this.y-41); 
-      stroke(0);
-      strokeWeight(1);
-      fill(255, 255, 0, a);
-      ellipse(this.x+37, this.y-44, 10, 10);
-      pop();
-      push();
-      rectMode(CENTER);
-      fill(255, 255, 255, 90);
-      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize+8, this.headSize+8);
-      fill(255);
-      rect(this.x, this.y, this.bodySize, this.bodySize, 10);
-      fill(this.bodyColor);
-      fill(this.headColor);
-      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
-      fill(0, 0, 0, 90);
-      ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize-2, this.headSize-10);
-      pop();
-
-    }
-  
-    move(){
-      a = (128 + 128 * sin(millis() / 700));
-
-      let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
-      // update our position
-      this.x -= this.Xspeed;
-      this.y += yMovement;
-
-      this.yNoiseOffset += 0.01;
-      }
-
-      displayAnimated() {
-        a = (128 + 128 * sin(millis() / 700));
-
-        push();
-        swarm.rectMode(CORNER);
-        swarm.stroke(170, 0, 0);
-        swarm.strokeWeight(4);
-        swarm.line(this.x-2, this.y,this.x+34, this.y-41); 
-        swarm.stroke(0);
-        swarm.strokeWeight(1);
-        swarm.fill(255, 255, 0, a);
-        swarm.ellipse(this.x+37, this.y-44, 10, 10);
-        swarm.pop();
-        swarm.push();
-        swarm.rectMode(CENTER);
-        swarm.fill(255, 255, 255, 90);
-        swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize+8, this.headSize+8);
-        swarm.fill(255);
-        swarm.rect(this.x, this.y, this.bodySize, this.bodySize, 10);
-        swarm.fill(this.bodyColor);
-        swarm.fill(this.headColor);
-        swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize, this.headSize);
-        swarm.fill(0, 0, 0, 90);
-        swarm.ellipse(this.x, this.y-this.bodySize/2-this.headSize/2, this.headSize-2, this.headSize-10);
-        pop();
-    
-      }
-      moveAnimated(){
-        let yMovement = map( noise(this.yNoiseOffset), 0, 1, -1, 1 );
-        // update our position
-        this.x -= this.Xspeed;
-        this.y += yMovement;
-    
-        this.yNoiseOffset += 0.01;
-      }
-      checkCollision(){
-  
-  
-      }
-  
-}
-
+// ENEMY GENERATION
 function visor(){
   rect(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, this.headSize/2, 10);
   swarm.rect(this.x, this.y-this.bodySize/2-(this.headSize/3)*2, this.headSize/2, 10);
 }
-
 
 function twoEyes(){
   rect(this.x-this.headSize/4, this.y-this.bodySize/2-(this.headSize/3)*2, 6, 10);
@@ -838,158 +988,3 @@ const eyeArray = [
   twoEyes,
   glasses
 ]
-
-function getColor(dr) {
-  // get average color of the top of the screen
-  let r = 0;
-  let g = 0;
-  let b = 0;
-  for(let i = 0; i < 500; i++){
-    if (dr == "top") {
-      let c = get(i, 1);
-      r += red(c);
-      g += green(c);
-      b += blue(c);
-    }
-
-    else if (dr == "bottom") {
-      let c = get(i, 499);
-      r += red(c);
-      g += green(c);
-      b += blue(c);
-    }
-  }
-
-  r = r/500;
-  g = g/500;
-  b = b/500;
-
-  transColor = color(r, g, b);
-}
-
-function animation(){
-
-
-  if(animatedRobots.length != 0){
-    for(let i = animatedRobots.length-1; i >= 0; i--){
-      animatedRobots[i].moveAnimated();
-      noStroke();
-      animatedRobots[i].displayAnimated();
-      if(animatedRobots[i].x > width+100 || animatedRobots[i].x < -80 || animatedRobots[i].y > height || animatedRobots[i].y < -50){
-        animatedRobots.splice(i, 1);
-          i = i - 1;
-      }
-  
-  
-      
-    }
-    
-  } else {
-    swarm.clear();
-  }
-}
-
-function transitionMode() {
-
-
-
-  player.show();
-
-  animation();
-
-     console.log(animatedRobots.length);
-    if (state == 0) {
-      
-      let tHeight = bg.y-height;
-      noStroke();
-      fill(transColor);
-  
-      if (tHeight < height){
-      
-        rect(0, tHeight, width, height);
-        bg.transition("up");
-        bg.display();
-        
-        image(nextImg1, 0, tHeight - height, width, height);  
-        image(nextImg2, 0, tHeight - height, width, height);
-        image(nextImg3, 0, tHeight - height, width, height);
-
-        
-      }  else {
-
-        for(let i = 20; i >= 0; i--){
-          animatedRobots.push(new Robot(random(width+10, width+65), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
-        }
-        
-        
-        state = 1;
-        bg.y = 0;
-        bg.layer1X1 = 0;
-        bg.layer1X2 = width;
-        bg.layer2X1 = 0;
-        bg.layer2X2 = width;
-        bg.layer3X1 = 0;
-        bg.layer3X2 = width;
-        bg.img1 = nextImg1;
-        bg.img2 = nextImg2;
-        bg.img3 = nextImg3;
-        
-        inTransition = false;
-      }
-      
-    }
-
-  else if (state == 1) {
-   
-  
-    let tHeight = bg.y+height;
-    noStroke();
-    fill(transColor);
-
-    if (tHeight > -height){
-      rect(0, tHeight, width, height);
-      bg.transition("down");
-      bg.display();
-      image(nextImg1, 0, tHeight + height, width, height);
-      image(nextImg2, 0, tHeight + height, width, height);
-      image(nextImg3, 0, tHeight + height, width, height);
-      player.show();
-    }
-
-    else {
-      for(let i = 20; i >= 0; i--){
-        animatedRobots.push(new SpaceMan(random(width+10, width+65), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
-      }
-
-      state = 0;
-      bg.y = 0;
-      bg.layer1X1 = 0;
-      bg.layer1X2 = width;
-      bg.layer2X1 = 0;
-      bg.layer2X2 = width;
-      bg.layer3X1 = 0;
-      bg.layer3X2 = width;
-      bg.img1 = nextImg1;
-      bg.img2 = nextImg2;
-      bg.img3 = nextImg3;
-      inTransition = false;
-    }
-
-  }
-
-}
-
-function determineNextBG(){
-  if(state==0){
-    nextImg1 = dim2Back[floor(random(0, dim2Back.length))];
-    nextImg2 = dim2Middle[floor(random(0, dim2Middle.length))];
-    nextImg3 = dim2Front[floor(random(0, dim2Front.length))];
-  }
-  else if(state==1){
-    
-   
-    nextImg1 = dim1Back[floor(random(0, dim1Back.length))];
-    nextImg2 = dim1Middle[floor(random(0, dim1Middle.length))];
-    nextImg3 = dim1Front[floor(random(0, dim1Front.length))];
-  }
-}
