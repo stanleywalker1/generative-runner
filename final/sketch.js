@@ -2,7 +2,7 @@
 let platforms = [];
 let leftWall = -500;
 let state = 0;
-let trig;
+let currentClicks = 0;
 
 let bg;
 let bg1;
@@ -125,6 +125,18 @@ function setup() {
     face.resize(32, 32);
 
     coinSpawn = new Coin(random(width+10, width+65), random(height*0.1, height), 1);
+
+    currentClicks = window.localStorage.getItem('score');
+
+      if (currentClicks == null) {
+
+        window.localStorage.setItem('score', 0);
+
+        currentClicks = 0;
+      }
+      else {
+        currentClicks = int(currentClicks);
+      }
   
 }
 
@@ -140,7 +152,7 @@ function draw() {
       else if (state == 1) {
         L2Mode();
       }
-      swarm.clear();
+       swarm.clear();
       L1andL2Mode();
     }
 
@@ -154,7 +166,6 @@ function draw() {
   else if (state == 2) {
     restart();
   }
-
 }
 
 
@@ -164,7 +175,7 @@ function L1andL2Mode(){
   stroke(0);
   strokeWeight(2);
   textSize(18);
-  text("Score: " + score, 25, 45);
+  text("SCORE: " + score, 25, 45);
   pop();
 
   // ARROW PRODUCTION 
@@ -188,9 +199,10 @@ function L1andL2Mode(){
       i = i - 1;
     } 
 
-    if (d < 20){  // if the robot is approaching the arrow, swap direction
+    if (d < 20){ 
       arrowsArr.splice(i, 1);
       score++;
+      localStorage.setItem('score', score);
       if (state == 0){
         getColor("top");
       }
@@ -210,7 +222,6 @@ function L1andL2Mode(){
 
   for(let i = coinArr.length - 1; i >= 0; i--){
     coinArr[i].displayAndMove();
-    // coinArr[i].checkCollision();
     noStroke();
     let d = dist(coinArr[i].x, coinArr[i].y, player.x, player.y);
     let m = map(d, 20, 200, 3, 0.1);
@@ -220,10 +231,11 @@ function L1andL2Mode(){
       strokeWeight(m);
     }
 
-    if (d < 20){  // if the robot is approaching the arrow, swap direction
+    if (d < 20){  
       coinArr.splice(i, 1);
       coinAudio.play();
       score++;
+      document.getElementById("scoreText").innerHTML = currentClicks;
     }
     
     if(coinArr[i].x > width+100 || coinArr[i].x < -80 || coinArr[i].y > height || coinArr[i].y < -50){
@@ -358,7 +370,7 @@ function animation(){
       animatedRobots[i].moveAnimated();
       noStroke();
       animatedRobots[i].displayAnimated();
-      if(animatedRobots[i].x < -30 || animatedRobots[i].y > height || animatedRobots[i].y < -30){
+      if(animatedRobots[i].x < -30){
         animatedRobots.splice(i, 1);
           i = i - 1;
       }
@@ -394,6 +406,7 @@ function transitionMode() {
     }  
     
     else {
+
       for(let i = 20; i >= 0; i--){
         animatedRobots.push(new Robot(random(width+10, width+65), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
       }
@@ -436,7 +449,7 @@ function transitionMode() {
 
     else {
       for(let i = 20; i >= 0; i--){
-        animatedRobots.push(new SpaceMan(random(width+10, width+65), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
+        animatedRobots.push(new SpaceMan(random(500, 550), random(0, height), random(40, 50),random(30, 35), random(headPallete), random(bodyPallete), 7.5));
       }
 
       state = 0;
@@ -614,8 +627,8 @@ class Platform {
 
   display() {
 
-      fill(this.red, this.green, this.blue, 70);
-      stroke(255, 255, 255, 70); 
+      fill(this.red, this.green, this.blue, 90);
+      stroke(255, 255, 255, 90); 
       strokeWeight(3);
       rect(this.x, this.y, this.width, this.height);
 
