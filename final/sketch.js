@@ -376,6 +376,7 @@ function transitionMode() {
 
   player.show();
   animation();
+  noStroke();
 
   if (state == 0) {
     let tHeight = bg.y-height;

@@ -5,6 +5,11 @@
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/addons/p5.sound.min.js"></script>
     <script src="sketch.js"></script>
     <style>
+      @font-face { font-family: GameFont; src: url('font.ttf'); }
+      * {
+        font-family: GameFont;
+      }
+
       body {
         background: black;
         overflow: hidden;
@@ -28,6 +33,17 @@
         top: 130px;
         left: 208px;
       }
+
+      #game_desc{
+        width: 27%;
+        height: 15%;
+        color: white;
+        position: absolute;
+        right: 60px;
+        top: 270px;
+        font-size: 12px;
+      }
+
       #background {
         width: 100%;
         position: absolute;
@@ -55,6 +71,9 @@
        border-width: 5px;
        border-radius: 5px;
        z-index: 10;
+       position: absolute;
+       right: 150px;
+       top: 20px;
       }
 
     </style>
@@ -71,8 +90,8 @@
           </svg>
         </a></div>
        
-      <h1> Infinite Runner Game </h1>
-      <h3>click or space bar to jump</h3>
+      <h1> Portal Runner </h1>
+      <h3>click or press space bar to jump</h3>
      
      </div>
     </div>
@@ -80,6 +99,15 @@
     <div id="background">
       <img src="media/dalleComputer.png">
     </div>
-    <div id = "game_container"> </div>
+    <div id="game_container"></div>
+    <div id = "game_desc"> 
+      <p> Oh the places you'll go! </p>
+      <p> Welcome to Portal Runner. Recognize that little orb? That's you. And you've got a debt to pay.</p>
+      <p> Collect as many coins as possible and avoid your enemies... you've got a ton of them.</p>
+      <p> Luckily, you, the Holy orb, have the ability to travel further and faster than anyone else. How? </p>
+      <p> If you can reach the portals (arrows), they'll take you to some land far away in space.</p>
+      <p> If your enemies find you there, worry not! You can use the portals again to return to your planet.</p>
+      <p> Well ... some planet. Good luck!</p>
+    </div>
   </body>
 </html>
