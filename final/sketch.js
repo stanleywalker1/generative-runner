@@ -590,12 +590,17 @@ class Player {
   }
 
   up() {
+    if(this.y >= 30){
     this.velocity += this.lift;
+    }
   }
 
   update() {
     this.velocity += this.gravity;
+
+    
     this.y += this.velocity;
+  
 
     if (this.y + this.size/2 > floorY) {
       this.y = floorY - this.size/2;
